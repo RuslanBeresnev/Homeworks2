@@ -1,15 +1,9 @@
 ﻿using System;
 
-class Sort
+// Статический класс с алгоритмами сортировок
+static class Sort
 {
-    static void Swap(ref int a, ref int b)
-    {
-        var temporary = a;
-        a = b;
-        b = temporary;
-    }
-
-    static int[] BubbleSort(int[] array)
+    public static int[] BubbleSort(int[] array)
     {
         var length = array.Length;
         for (var i = 1; i < length; i++)
@@ -18,14 +12,14 @@ class Sort
             {
                 if (array[j] > array[j + 1])
                 {
-                    Swap(ref array[j], ref array[j + 1]);
+                    (array[j], array[j + 1]) = (array[j + 1], array[j]);
                 }
             }
         }
         return array;
     }
 
-    static void Main(string[] args)
+    public static void Main(string[] args)
     {
         Console.WriteLine("Введите элементы массива через пробел: ");
         var data = Console.ReadLine().Split(" ");
@@ -34,6 +28,6 @@ class Sort
         {
             array[i] = Convert.ToInt32(data[i]);
         }
-        Console.WriteLine("Отсортированный массив: {0}", string.Join(" ", BubbleSort(array)));
+        Console.WriteLine($"Отсортированный массив: {string.Join(" ", BubbleSort(array))}");
     }
 }
