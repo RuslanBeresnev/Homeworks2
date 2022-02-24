@@ -1,36 +1,36 @@
 ﻿using System;
 
-public class BWT
+// Прямое и обратное преобразования Барроуза-Уилера
+public static class BWT
 {
-    private static string leftShift(string line, int count)
-    {
-        return line.Substring(count) + line.Substring(0, count);
-    }
+    private static string LeftShift(string line, int count)
+        => line.Substring(count) + line.Substring(0, count);
 
-    public static string Direct(string line, ref int endPosition)
+    public static (string, int) DirectBWT(string line)
     {
-        string[] cyclicShifts = new string[line.Length];
+        var cyclicShifts = new string[line.Length];
         for (var i = 0; i < line.Length; i++)
         {
             cyclicShifts[i] = line;
-            line = leftShift(line, 1);
+            line = LeftShift(line, 1);
         }
         Array.Sort(cyclicShifts);
 
         string result = "";
+        int endPosition = 0;
         for (var i = 0; i < line.Length; i++)
         {
             result += cyclicShifts[i][cyclicShifts[i].Length - 1];
-            if (String.Compare(line, cyclicShifts[i]) == 0)
+            if (line == cyclicShifts[i])
             {
                 endPosition = i;
             }
         }
 
-        return result;
+        return (result, endPosition);
     }
 
-    public static string Inverse(string line, int endPosition)
+    public static string InverseBWT(string line, int endPosition)
     {
         string[] table = new string[line.Length];
         for (var i = 0; i < line.Length; i++)
@@ -46,9 +46,8 @@ public class BWT
 
     private static bool Checking(string line)
     {
-        int endPosition = 0;
-        string transformedLine = Direct(line, ref endPosition);
-        string inversedTransformedLine = Inverse(transformedLine, endPosition);
+        (string transformedLine, int endPosition) = DirectBWT(line);
+        string inversedTransformedLine = InverseBWT(transformedLine, endPosition);
         return String.Compare(inversedTransformedLine, line) == 0;
     }
 
