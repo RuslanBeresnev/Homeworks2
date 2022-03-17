@@ -1,29 +1,16 @@
-﻿using System;
+﻿using System.Collections;
 
 namespace Task2;
 
 internal static class LZW
 {
-    const int CodeLength = 4;
-
-    private static string AddLeadingZeros(int number, int newNumberLength)
-    {
-        string newNumber = "";
-        for (int i = 0; i < newNumberLength - number.ToString().Length; i++)
-        {
-            newNumber += "0";
-        }
-        newNumber += number.ToString();
-        return newNumber;
-    }
-
     public static void Compress(string inputFileName)
     {
-        var table = new Dictionary<string, string>();
+        var table = new Dictionary<string, char>();
         int newRecordsCount = 0;
         for (int i = 0; i < 256; i++)
         {
-            table[((char)i).ToString()] = AddLeadingZeros(i, CodeLength);
+            table[((char)i).ToString()] = (char)i;
         }
 
         byte[] inputData = File.ReadAllBytes(inputFileName);
@@ -36,7 +23,7 @@ internal static class LZW
         }
         newFileName += "zipped";
 
-        FileStream fileStream = new FileStream(newFileName, FileMode.OpenOrCreate, FileAccess.Write);
+        FileStream fileStream = new FileStream(newFileName, FileMode.Create, FileAccess.Write);
         StreamWriter streamWriter = new StreamWriter(fileStream);
 
         string fileExtension = "." + splittedFileName[splittedFileName.Length - 1];
@@ -46,6 +33,7 @@ internal static class LZW
         for (int i = 0; i < inputData.Length; i++)
         {
             char symbol = (char)inputData[i];
+
             if (table.ContainsKey(currentPhrase + symbol))
             {
                 currentPhrase += symbol;
@@ -54,8 +42,20 @@ internal static class LZW
             {
                 streamWriter.Write(table[currentPhrase]);
                 newRecordsCount++;
-                table[currentPhrase + symbol] = AddLeadingZeros(255 + newRecordsCount, CodeLength);
+                table[currentPhrase + symbol] = (char)(255 + newRecordsCount);
                 currentPhrase = symbol.ToString();
+            }
+
+            if (newRecordsCount == 65536 - 255)
+            {
+                streamWriter.Write(table[currentPhrase]);
+                table = new Dictionary<string, char>();
+                newRecordsCount = 0;
+                currentPhrase = "";
+                for (int j = 0; j < 256; j++)
+                {
+                    table[((char)j).ToString()] = (char)j;
+                }
             }
         }
         streamWriter.Write(table[currentPhrase]);
@@ -66,34 +66,42 @@ internal static class LZW
 
     public static void Decompress(string inputFileName)
     {
-        var table = new Dictionary<string, string>();
+        var table = new Dictionary<char, string>();
         int newRecordsCount = 0;
         for (int i = 0; i < 256; i++)
         {
-            table[AddLeadingZeros(i, CodeLength)] = ((char)i).ToString();
+            table[(char)i] = ((char)i).ToString();
         }
 
         string[] data = File.ReadAllLines(inputFileName);
         string fileExtension = data[0];
-        string encodedData = data[1];
+        string encodedData = "";
+        for (int i = 1; i < data.Length; i++)
+        {
+            encodedData += data[i];
+            if (i != data.Length - 1)
+            {
+                encodedData += "\r\n";
+            }
+        }
 
         int lastDotindex = inputFileName.LastIndexOf(".");
         string newFileName = inputFileName.Substring(0, lastDotindex) + fileExtension;
 
-        FileStream fileStream = new FileStream(newFileName, FileMode.OpenOrCreate, FileAccess.Write);
+        FileStream fileStream = new FileStream(newFileName, FileMode.Create, FileAccess.Write);
         StreamWriter streamWriter = new StreamWriter(fileStream);
 
         string previousDecodedValue = "";
-        for (int i = 0; i < encodedData.Length; i += CodeLength)
+        for (int i = 0; i < encodedData.Length; i++)
         {
-            string currentCode = encodedData.Substring(i, CodeLength);
+            char currentCode = encodedData[i];
             if (table.ContainsKey(currentCode))
             {
                 streamWriter.Write(table[currentCode]);
                 if (previousDecodedValue != "")
                 {
                     newRecordsCount++;
-                    table[AddLeadingZeros(255 + newRecordsCount, CodeLength)] = previousDecodedValue + table[currentCode].Substring(0, 1);
+                    table[(char)(255 + newRecordsCount)] = previousDecodedValue + table[currentCode].Substring(0, 1);
                 }
                 previousDecodedValue = table[currentCode];
             }
@@ -102,8 +110,19 @@ internal static class LZW
                 string createdValue = previousDecodedValue + previousDecodedValue.Substring(0, 1);
                 streamWriter.Write(createdValue);
                 newRecordsCount++;
-                table[AddLeadingZeros(255 + newRecordsCount, CodeLength)] = createdValue;
+                table[(char)(255 + newRecordsCount)] = createdValue;
                 previousDecodedValue = table[currentCode];
+            }
+
+            if (newRecordsCount == 65536)
+            {
+                table = new Dictionary<char, string>();
+                newRecordsCount = 0;
+                previousDecodedValue = "";
+                for (int j = 0; j < 256; j++)
+                {
+                    table[(char)i] = ((char)i).ToString();
+                }
             }
         }
 
@@ -113,9 +132,9 @@ internal static class LZW
 
     public static void Main(string[] args)
     {
-        /*Compress("C:/Users/User/source/repos/Homeworks2/Задания с 03.03.2022/Task2/Task2/bin/Debug/net6.0/Task10.exe");
-        Decompress("C:/Users/User/source/repos/Homeworks2/Задания с 03.03.2022/Task2/Task2/bin/Debug/net6.0/Task10.zipped");
-        Compress("C:/Users/User/source/repos/Homeworks2/Задания с 03.03.2022/Task2/Task2/test.txt");
+        /*  Compress("C:/Users/User/source/repos/Homeworks2/Задания с 03.03.2022/Task2/Task2/bin/Debug/net6.0/Task10.exe");
+          Decompress("C:/Users/User/source/repos/Homeworks2/Задания с 03.03.2022/Task2/Task2/bin/Debug/net6.0/Task10.zipped");*/
+/*        Compress("C:/Users/User/source/repos/Homeworks2/Задания с 03.03.2022/Task2/Task2/test.txt");
         Decompress("C:/Users/User/source/repos/Homeworks2/Задания с 03.03.2022/Task2/Task2/test.zipped");*/
     }
 }
