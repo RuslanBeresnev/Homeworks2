@@ -1,5 +1,8 @@
 ﻿using System;
 
+/// <summary>
+/// Тесты к программе
+/// </summary>
 internal class Program
 {
     private static bool GlobalTest()

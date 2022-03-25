@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 
+/// <summary>
+/// Структура "Бор"
+/// </summary>
 public class Trie
 {
     private class Node
@@ -19,6 +22,9 @@ public class Trie
 
     public Trie() { }
 
+    /// <summary>
+    /// Добавить новое слово в структуру (если добавление произошло, возвращает true)
+    /// </summary>
     public bool Add(string element)
     {
         Node current = root;
@@ -36,11 +42,19 @@ public class Trie
             current = current.childs[letter];
         }
 
+        if (!current.isTerminal)
+        {
+            containsBefore = false;
+        }
+
         current.isTerminal = true;
 
         return !containsBefore;
     }
 
+    /// <summary>
+    /// Проверка на наличие слова в структуре
+    /// </summary>
     public bool Contains(string element)
     {
         Node current = root;
@@ -57,12 +71,12 @@ public class Trie
         return current.isTerminal;
     }
 
+    /// <summary>
+    /// Удаление слова из структуры (если удаление произошло, возвращает true)
+    /// </summary>
     public bool Remove(string element)
     {
         Node current = root;
-
-        Node lastNodeWithChilds = root;
-        char firstLetterInLastBranch = '0';
 
         Size -= 1;
 
@@ -72,19 +86,18 @@ public class Trie
             {
                 return false;
             }
-            if (current.childs.Count > 1)
-            {
-                lastNodeWithChilds = current;
-                firstLetterInLastBranch = letter;
-            }
             current = current.childs[letter];
         }
 
-        lastNodeWithChilds.childs.Remove(firstLetterInLastBranch);
+        current.isTerminal = false;
 
         return true;
     }
 
+    /// <summary>
+    /// Проверить, сколько слов в структуре начинаются с данного префикса
+    /// </summary>
+    /// <param name="prefix">Заданный префикс</param>
     public int HowManyStartsWithPrefix(string prefix)
     {
         Node current = root;
