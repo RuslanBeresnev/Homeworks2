@@ -1,26 +1,35 @@
 ﻿using System;
+using PostfixCalculator;
 
+/// <summary>
+/// Интерфейсная часть программы
+/// </summary>
 public class Program
 {
-
-    public static bool GlobalTest()
-    {
-        ListStack listStack = new ListStack();
-        PostfixCalculator firstCalculator = new PostfixCalculator(listStack);
-        double firstResult = firstCalculator.CalculateExpression("3 2 - 5 / 6 *");
-
-        ArrayStack arrayStack = new ArrayStack();
-        PostfixCalculator secondCalculator = new PostfixCalculator(arrayStack);
-        double secondResult = secondCalculator.CalculateExpression("3 2 - 5 / 6 *");
-
-        return Math.Abs(firstResult - 1.2) < 0.000001 && Math.Abs(secondResult - 1.2) < 0.000001;
-    }
-
     public static void Main(string[] args)
     {
-        if (GlobalTest())
-            Console.WriteLine("Калькулятор работает правильно");
+        Console.WriteLine("Программа \"Постфиксный калькулятор\". Введите постфиксную последовательность, " +
+    "чтобы посчитать её значение:");
+        string? sequence = Console.ReadLine();
+
+        if (sequence == "")
+        {
+            Console.WriteLine("Вы ничего не ввели ...");
+        }
         else
-            Console.WriteLine("Калькулятор работает неправильно");
+        {
+            ArrayStack arrayStack = new ArrayStack();
+            PostfixCalculator.PostfixCalculator calculator = new PostfixCalculator.PostfixCalculator(arrayStack);
+            (double? result, bool allRight) = calculator.CalculateExpression(sequence);
+
+            if (allRight)
+            {
+                Console.WriteLine($"Результат: {result}");
+            }
+            else
+            {
+                Console.WriteLine("Введена некорректная постфиксная последовательность ...");
+            }
+        }
     }
 }

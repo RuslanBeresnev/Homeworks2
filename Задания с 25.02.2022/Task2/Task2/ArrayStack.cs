@@ -1,17 +1,19 @@
 ﻿using System;
 
-internal class ArrayStack : IStack
+namespace PostfixCalculator;
+
+public class ArrayStack : IStack
 {
     private double[] items;
     private int count = 0;
 
-    internal ArrayStack()
+    public ArrayStack()
         => items = new double[25];
 
-    internal ArrayStack(int count)
+    public ArrayStack(int count)
         => items = new double[count];
 
-    internal bool IsEmpty()
+    public bool IsEmpty()
         => count == 0;
 
     public void Push(double value)
@@ -24,13 +26,13 @@ internal class ArrayStack : IStack
         count++;
     }
 
-    public double Pop()
+    public (double?, bool) Pop()
     {
         if (IsEmpty())
-            throw new InvalidOperationException("Стек пуст");
+            return (null, false);
         count--;
         double value = items[count];
         items[count] = 0.0;
-        return value;
+        return (value, true);
     }
 }

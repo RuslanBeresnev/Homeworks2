@@ -1,52 +1,72 @@
 ﻿using System;
 
-internal class PostfixCalculator
+namespace PostfixCalculator;
+
+/// <summary>
+/// Реализация постфиксного калькулятора на выбранном стеке
+/// </summary>
+public class PostfixCalculator
 {
     private IStack stack;
 
-    internal PostfixCalculator(IStack stack)
+    public PostfixCalculator(IStack stack)
     {
         this.stack = stack;
     }
 
-    internal double CalculateExpression(string expression)
+    /// <summary>
+    /// Подсчитывает значение по постфиксной записи
+    /// </summary>
+    /// <param name="expression">Постфиксная запись</param>
+    public (double?, bool) CalculateExpression(string expression)
     {
         string[] tokens = expression.Split(' ');
+        bool isCorrectSequence = true;
 
         foreach(var token in tokens)
         {
+            if (!isCorrectSequence)
+            {
+                break;
+            }
+
             int number;
             bool isNumber = int.TryParse(token, out number);
             if (isNumber)
                 stack.Push(number);
             else
             {
+                (double? number2, isCorrectSequence) = stack.Pop();
+                (double? number1, isCorrectSequence) = stack.Pop();
+
+                if (!isCorrectSequence)
+                    break;
+
                 switch(token)
                 {
                     case "+":
-                        stack.Push(stack.Pop() + stack.Pop());
+                        stack.Push((double)number1 + (double)number2);
                         break;
                     case "-":
-                        double number2 = stack.Pop();
-                        stack.Push(stack.Pop() - number2);
+                        stack.Push((double)number1 - (double)number2);
                         break;
                     case "*":
-                        stack.Push(stack.Pop() * stack.Pop());
+                        stack.Push((double)number1 * (double)number2);
                         break;
                     case "/":
-                        number2 = stack.Pop();
-                        if (Math.Abs(number2 - 0.0) > 0.00000001)
-                            stack.Push(stack.Pop() / number2);
+                        if (Math.Abs((double)number2 - 0.0) > 0.00000001)
+                            stack.Push((double)number1 / (double)number2);
                         else
-                            throw new InvalidOperationException("Деление на ноль");
+                            isCorrectSequence = false;
                         break;
                     default:
-                        throw new InvalidOperationException("Неизвестная операция");
-
+                        isCorrectSequence = false;
+                        break;
                 }
             }
         }
 
-        return stack.Pop();
+        (double? result, isCorrectSequence) = stack.Pop();
+        return (result, isCorrectSequence);
     }
 }

@@ -1,6 +1,8 @@
 ﻿using System;
 
-internal class ListStack : IStack
+namespace PostfixCalculator;
+
+public class ListStack : IStack
 {
     public class Node
     {
@@ -16,11 +18,11 @@ internal class ListStack : IStack
 
     private int count;
 
-    internal ListStack() {}
+    public ListStack() {}
 
     internal Node head { get; set; }
 
-    internal bool IsEmpty()
+    public bool IsEmpty()
         => count == 0;
 
     public void Push(double value)
@@ -31,13 +33,13 @@ internal class ListStack : IStack
         count++;
     }
 
-    public double Pop()
+    public (double?, bool) Pop()
     {
         if (IsEmpty())
-            throw new InvalidOperationException("Стек пуст");
+            return (null, false);
         count--;
         Node temporary = head;
         head = head.next;
-        return temporary.value;
+        return (temporary.value, true);
     }
 }
