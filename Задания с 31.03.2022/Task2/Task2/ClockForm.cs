@@ -17,31 +17,30 @@ public partial class ClockForm : Form
 
         graphic = CreateGraphics();
 
-        penForDial = new Pen(Color.Black, 7);
-        penForHourArrow = new Pen(Color.Red, 5);
+        penForDial = new Pen(Color.Black, 6);
+        penForHourArrow = new Pen(Color.Black, 5);
         penForHourArrow.CustomEndCap = new AdjustableArrowCap(3, 3);
-        penForMinuteArrow = new Pen(Color.Black, 3);
+        penForMinuteArrow = new Pen(Color. Black, 3);
         penForMinuteArrow.CustomEndCap = new AdjustableArrowCap(3, 3);
-        penForSecondArrow = new Pen(Color.Black, 3);
+        penForSecondArrow = new Pen(Color.Red, 2);
         penForSecondArrow.CustomEndCap = new AdjustableArrowCap(3, 3);
     }
 
-    private void ClockForm_Paint(object sender, PaintEventArgs e)
+    private void TimerTick(object sender, EventArgs e)
     {
         graphic.Clear(Color.White);
 
-        graphic.DrawEllipse(penForDial, 100, 75, 300, 300);
+        graphic.DrawEllipse(penForDial, 100, 100, 300, 300);
+        graphic.DrawEllipse(penForDial, 246, 246, 8, 8);
 
         graphic.DrawLine(penForHourArrow, 250, 250,
-            250 + 150 * (int) Math.Cos(2 * Math.PI / 12 * (DateTime.Now.Hour % 12)),
-            250 + 150 * (int) Math.Sin(2 * Math.PI / 12 * (DateTime.Now.Hour % 12)));
+            250 + 90 * (float)Math.Sin(2 * Math.PI / 12 * (DateTime.Now.Hour % 12)),
+            250 - 90 * (float)Math.Cos(2 * Math.PI / 12 * (DateTime.Now.Hour % 12)));
         graphic.DrawLine(penForMinuteArrow, 250, 250,
-            250 + 150 * (int)Math.Cos(2 * Math.PI / 12 * DateTime.Now.Minute),
-            250 + 150 * (int)Math.Sin(2 * Math.PI / 12 * DateTime.Now.Minute));
+            250 + 105 * (float)Math.Sin(2 * Math.PI / 60 * DateTime.Now.Minute),
+            250 - 105 * (float)Math.Cos(2 * Math.PI / 60 * DateTime.Now.Minute));
         graphic.DrawLine(penForSecondArrow, 250, 250,
-            250 + 150 * (int)Math.Cos(2 * Math.PI / 12 * DateTime.Now.Second),
-            250 + 150 * (int)Math.Sin(2 * Math.PI / 12 * DateTime.Now.Second));
-
-        penForDial.Dispose();
+            250 + 105 * (float)Math.Sin(2 * Math.PI / 60 * DateTime.Now.Second),
+            250 - 105 * (float)Math.Cos(2 * Math.PI / 60 * DateTime.Now.Second));
     }
 }
