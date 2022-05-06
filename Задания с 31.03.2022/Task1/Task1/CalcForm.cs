@@ -6,4 +6,9 @@ public partial class CalcForm : Form
     {
         InitializeComponent();
     }
+
+    public void CalcWindowSetText(string text)
+    {
+        calcWindow.Text = text;
+    }
 }
