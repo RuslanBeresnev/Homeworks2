@@ -1,46 +1,152 @@
 ﻿namespace Calc;
 
-// Задачи:
-// 1. Доделать лексер
-// 2. Подумать насчёт двух комментариев в третьем состоянии
-// 3. Написать логику обработки нажатия каждой кнопки
-// 4. Вывести всё на экран вычислений (заменить комментарии об этом)
-// 5. Запилить DataBinding
-// 6. Сделать тесты к калькулятору
+using System.ComponentModel;
 
-public static class CalcLogic
+/// <summary>
+/// Класс, реализующий логику работы калькулятора
+/// </summary>
+public class CalcLogic : INotifyPropertyChanged
 {
+    /// <summary>
+    /// Состояния конечного автомата
+    /// </summary>
     private enum State
     {
         EmptyCalculationWindow,
-        FirstNumberInWindow,
+        NumberInWindow,
         ArithmeticalOperation,
-        SecondNumberInWindow
     }
 
-    private static State currentState = State.EmptyCalculationWindow;
+    private State currentState = State.EmptyCalculationWindow;
+    private ButtonType? previousPushedButtonType;
 
-    private static string firstNumber = "";
-    private static string operation = "";
-    private static string secondNumber = "";
-    private static float result = 0;
+    private string number = "";
+    private string operation = "";
+    private float result = 0;
 
-    private static bool inverseFirstNumberAfterParsing = false;
-    private static bool inverseSecondNumberAfterParsing = false;
+    private string calcWindowText = "";
 
-    private static void ClearAll()
+    /// <summary>
+    /// Текст на экране вычислений калькулятора
+    /// </summary>
+    public string CalcWindowText {
+        get { return calcWindowText; }
+        set
+        {
+            if (value != CalcWindowText)
+            {
+                calcWindowText = value;
+                OnPropertyChanged("CalcWindowText");
+            }
+        }
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    /// <summary>
+    /// Обработчик изменения свойства класса
+    /// </summary>
+    protected virtual void OnPropertyChanged(string propertyName)
+    {
+        if (PropertyChanged != null)
+        {
+            PropertyChanged.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
+
+    /// <summary>
+    /// Очистить экран вычислений, текущие данные и перейти в нулевое состояние
+    /// </summary>
+    private void ClearAll()
     {
         currentState = State.EmptyCalculationWindow;
-        // Стереть всё с экрана вычислений ( с помощью метода CalcWindowSetText() )
+        CalcWindowText = "";
 
-        firstNumber = "";
+        number = "";
         operation = "";
-        secondNumber = "";
+        result = 0;
     }
 
-    public static void ChangeState(ButtonType type, string? text)
+    /// <summary>
+    /// Преобразовать текст из цифр в число
+    /// </summary>
+    private float ParseNumber()
     {
-        if (type == ButtonType.Clear)
+        float parsedNumber;
+
+        if (number[number.Length - 1] == ',')
+        {
+            string numberWithoutComma = number.Substring(0, number.Length - 1);
+            parsedNumber = float.Parse(numberWithoutComma);
+        }
+        else
+        {
+            parsedNumber = float.Parse(number);
+        }
+
+        return parsedNumber;
+    }
+
+    /// <summary>
+    /// Пересчитать результат вычислений
+    /// </summary>
+    private bool RecalculateResultValue()
+    {
+        float parsedNumber = ParseNumber();
+
+        switch (operation)
+        {
+            case "+":
+                result += parsedNumber;
+                break;
+            case "-":
+                result -= parsedNumber;
+                break;
+            case "*":
+                result *= parsedNumber;
+                break;
+            case "/":
+                if (Math.Abs(parsedNumber) < 0.0000001F)
+                {
+                    return false;
+                }
+                result /= parsedNumber;
+                break;
+            case "√":
+                if (result < 0)
+                {
+                    return false;
+                }
+                result = (float)Math.Sqrt(result);
+                break;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Вычислить результат после применения операции и вывести на экран результат или сообщение об ошибке
+    /// </summary>
+    private void CheckOperationCorrectnessAndDisplayResultOnScreen()
+    {
+        bool successfulyRecalculation = RecalculateResultValue();
+        if (!successfulyRecalculation)
+        {
+            ClearAll();
+            CalcWindowText = "Ошибка";
+        }
+        else
+        {
+            CalcWindowText = result.ToString();
+        }
+    }
+
+    /// <summary>
+    /// Поменять состояние конечного автомата
+    /// </summary>
+    public void ChangeState(ButtonType currentPushedButtonType, string? text)
+    {
+        if (currentPushedButtonType == ButtonType.Clear)
         {
             ClearAll();
             return;
@@ -49,120 +155,108 @@ public static class CalcLogic
         switch (currentState)
         {
             case State.EmptyCalculationWindow:
-                if (type == ButtonType.Number)
+                if (currentPushedButtonType == ButtonType.Number && text != ",")
                 {
-                    currentState = State.FirstNumberInWindow;
-                    firstNumber += text;
-                    // Вывести firstNumber на экран вычислений ( с помощью метода CalcWindowSetText() )
+                    ClearAll();
+                    currentState = State.NumberInWindow;
+                    number += text;
+                    CalcWindowText = number;
                 }
                 break;
-            case State.FirstNumberInWindow:
-                if (type == ButtonType.BinaryOperation)
+            case State.NumberInWindow:
+                if (operation == "")
                 {
-                    currentState = State.ArithmeticalOperation;
-                    operation = text!;
-                    // Вывести operation на экран вычислений ( с помощью метода CalcWindowSetText() )
+                    result = ParseNumber();
+                }
 
-                    if (firstNumber[firstNumber.Length - 1] == ',')
-                    {
-                        firstNumber = firstNumber.Substring(0, firstNumber.Length - 1);
-                    }
-                    float parsedFirstNumber = float.Parse(firstNumber);
-                    if (inverseFirstNumberAfterParsing)
-                    {
-                        parsedFirstNumber = -parsedFirstNumber;
-                    }
-                    result += parsedFirstNumber;
-                }
-                else if (type == ButtonType.Number)
+                if (currentPushedButtonType == ButtonType.BinaryOperation || currentPushedButtonType == ButtonType.Equals)
                 {
-                    firstNumber += text;
-                    // Вывести firstNumber на экран вычислений ( с помощью метода CalcWindowSetText() )
-                }
-                else if (type == ButtonType.InverseNumber)
-                {
-                    inverseFirstNumberAfterParsing = !inverseFirstNumberAfterParsing;
-                    if (float.Parse(firstNumber) > 0)
+                    if (!(previousPushedButtonType == ButtonType.Equals && currentPushedButtonType == ButtonType.BinaryOperation) &&
+                        operation != "")
                     {
-                        // Вывести на экран вычислений перед числом унарный знак
+                        CheckOperationCorrectnessAndDisplayResultOnScreen();
                     }
-                    else if (float.Parse(firstNumber) < 0)
+                    if (currentPushedButtonType == ButtonType.BinaryOperation)
                     {
-                        // Убрать на экране вычислений перед числом унарный знак
+                        operation = text!;
+                        currentState = State.ArithmeticalOperation;
+                    }
+                }
+                else if (currentPushedButtonType == ButtonType.Number)
+                {
+                    if (number == "0")
+                    {
+                        if (text == ",")
+                        {
+                            number += ",";
+                        }
+                        else
+                        {
+                            number = text!;
+                        }
+                    }
+                    else
+                    {
+                        if (text != "," || (text == "," && !number.Contains(",")))
+                        {
+                            number += text;
+                        }
+                    }
+
+                    CalcWindowText = number;
+                }
+                else if (currentPushedButtonType == ButtonType.UnaryOperation)
+                {
+                    if (text == "±")
+                    {
+                        if (ParseNumber() > 0)
+                        {
+                            number = "-" + number;
+                            CalcWindowText = number;
+                        }
+                        else if (ParseNumber() < 0)
+                        {
+                            number = number.Substring(1);
+                            CalcWindowText = number;
+                        }
+                    }
+                    else if (text == "√")
+                    {
+                        operation = "√";
+                        CheckOperationCorrectnessAndDisplayResultOnScreen();
                     }
                 }
                 break;
             case State.ArithmeticalOperation:
-                if (type == ButtonType.Number)
+                if (currentPushedButtonType == ButtonType.Number && text != ",")
                 {
-                    currentState = State.SecondNumberInWindow;
-                    secondNumber += text;
-                    // Вывести secondNumber на экран вычислений ( с помощью метода CalcWindowSetText() )
+                    currentState = State.NumberInWindow;
+                    number = text!;
+                    CalcWindowText = number;
                 }
-                break;
-            case State.SecondNumberInWindow:
-                if (type == ButtonType.BinaryOperation)
+                else if (currentPushedButtonType == ButtonType.BinaryOperation)
                 {
-                    currentState = State.ArithmeticalOperation;
                     operation = text!;
-                    // Вывести operation на экран вычислений ( с помощью метода CalcWindowSetText() )
-
-                    firstNumber = secondNumber;
-                    secondNumber = "";
-
-                    // Возможно, этот кусок и такой же кусок выше вынести в отдельный метод с осознанным названием ...
-                    // Возможно, упразднить secondNumber, так как он вроде не нужен ...
-                    if (firstNumber[firstNumber.Length - 1] == ',')
-                    {
-                        firstNumber = firstNumber.Substring(0, firstNumber.Length - 1);
-                    }
-                    float parsedFirstNumber = float.Parse(firstNumber);
-                    if (inverseFirstNumberAfterParsing)
-                    {
-                        parsedFirstNumber = -parsedFirstNumber;
-                    }
-
-                    switch (text)
-                    {
-                        case "+":
-                            // pass
-                            break;
-                        case "-":
-                            // pass
-                            break;
-                        case "*":
-                            // pass
-                            break;
-                        case "/":
-                            // pass
-                            break;
-                        case "<Знак квадратного корня>": // Заменить
-                            // pass
-                            break;
-                    }
                 }
-                else if (type == ButtonType.Equals)
+                else if (currentPushedButtonType == ButtonType.Equals)
                 {
-                    // pass
-                }
-                else if (type == ButtonType.Number)
-                {
-                    // pass
-                }
-                else if (type == ButtonType.InverseNumber)
-                {
-                    // pass
+                    CheckOperationCorrectnessAndDisplayResultOnScreen();
                 }
                 break;
         }
+
+        previousPushedButtonType = currentPushedButtonType;
     }
 }
 
+/// <summary>
+/// Типы кнопок на калькуляторе
+/// </summary>
 public enum ButtonType
 {
     Number,
     BinaryOperation,
-    InverseNumber,
+    UnaryOperation,
     Equals,
     Clear
 }

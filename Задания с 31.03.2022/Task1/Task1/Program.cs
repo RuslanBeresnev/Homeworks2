@@ -3,9 +3,13 @@ namespace Calc;
 internal static class Program
 {
     [STAThread]
-    static void Main()
+    private static void Main()
     {
         ApplicationConfiguration.Initialize();
-        Application.Run(new CalcForm());
+
+        var calcLogic = new CalcLogic();
+        var calcForm = new CalcForm(calcLogic);
+
+        Application.Run(calcForm);
     }
 }
