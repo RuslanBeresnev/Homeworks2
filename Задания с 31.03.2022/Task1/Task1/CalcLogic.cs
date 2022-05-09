@@ -27,11 +27,16 @@ public class CalcLogic : INotifyPropertyChanged
     private string calcWindowText = "";
 
     /// <summary>
+    /// Получить текущее вычисленное значение
+    /// </summary>
+    public float Result => result;
+
+    /// <summary>
     /// Текст на экране вычислений калькулятора
     /// </summary>
     public string CalcWindowText {
         get { return calcWindowText; }
-        set
+        private set
         {
             if (value != CalcWindowText)
             {
