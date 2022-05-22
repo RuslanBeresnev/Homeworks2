@@ -137,7 +137,7 @@ public class SkipList<T> : IList<T> where T : IComparable<T>
         int addedTopElements = 0;
         var random = new Random();
         int verdict = random.Next(2);
-        while (verdict == 1 && addedTopElements < LevelsCount)
+        while (verdict == 1 && addedTopElements < LevelsCount - 1)
         {
             var newTopElement = new ListElement(item);
             addedTopElements++;
@@ -283,6 +283,8 @@ public class SkipList<T> : IList<T> where T : IComparable<T>
         {
             elementToDelete = elementToDelete!.Next;
         }
+
+        Count--;
 
         while (true)
         {
