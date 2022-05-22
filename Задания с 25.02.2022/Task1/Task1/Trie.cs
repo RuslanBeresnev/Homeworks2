@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-/// <summary>
+﻿/// <summary>
 /// Структура "Бор"
 /// </summary>
 public class Trie
@@ -9,18 +6,24 @@ public class Trie
     private class Node
     {
         public Dictionary<char, Node> childs;
-        public bool isTerminal = false;
 
-        internal Node()
+        public Node()
         {
             childs = new Dictionary<char, Node>();
         }
+
+        /// <summary>
+        /// Конечная ли вершина
+        /// </summary>
+        public bool IsTerminal { get; set; }
     }
 
-    private Node root = new Node();
-    public int Size = 0;
+    private Node root = new();
 
-    public Trie() { }
+    /// <summary>
+    /// Количество элементов в структуре
+    /// </summary>
+    public int Count { get; set; } = 0;
 
     /// <summary>
     /// Добавить новое слово в структуру (если добавление произошло, возвращает true)
@@ -29,8 +32,6 @@ public class Trie
     {
         Node current = root;
         bool containsBefore = true;
-
-        Size += 1;
 
         foreach (char letter in element)
         {
@@ -42,12 +43,16 @@ public class Trie
             current = current.childs[letter];
         }
 
-        if (!current.isTerminal)
+        if (!current.IsTerminal)
         {
             containsBefore = false;
         }
 
-        current.isTerminal = true;
+        current.IsTerminal = true;
+        if (!containsBefore)
+        {
+            Count++;
+        }
 
         return !containsBefore;
     }
@@ -68,7 +73,7 @@ public class Trie
             current = current.childs[letter];
         }
 
-        return current.isTerminal;
+        return current.IsTerminal;
     }
 
     /// <summary>
@@ -77,8 +82,6 @@ public class Trie
     public bool Remove(string element)
     {
         Node current = root;
-
-        Size -= 1;
 
         foreach (char letter in element)
         {
@@ -89,9 +92,33 @@ public class Trie
             current = current.childs[letter];
         }
 
-        current.isTerminal = false;
+        if (current.IsTerminal)
+        {
+            current.IsTerminal = false;
+            Count -= 1;
+            return true;
+        }
+        return false;
+    }
 
-        return true;
+    /// <summary>
+    /// Рекурсивно получить количество терминальных точек на всех путях, начинающихся в стартовой вершине
+    /// </summary>
+    private int HowManyTerminalNodesRecursive(Node startNode)
+    {
+        if (startNode.IsTerminal)
+        {
+            return 1;
+        }
+
+        int terminalNodesCount = 0;
+        foreach (var letter in startNode.childs.Keys)
+        {
+            terminalNodesCount += HowManyTerminalNodesRecursive(startNode.childs[letter]);
+        }
+
+        return terminalNodesCount;
+
     }
 
     /// <summary>
@@ -104,9 +131,13 @@ public class Trie
 
         foreach (char letter in prefix)
         {
+            if (!current.childs.ContainsKey(letter))
+            {
+                return 0;
+            }
             current = current.childs[letter];
         }
 
-        return current.childs.Count;
+        return HowManyTerminalNodesRecursive(current);
     }
 }
