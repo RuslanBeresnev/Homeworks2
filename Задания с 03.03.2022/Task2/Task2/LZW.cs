@@ -1,140 +1,147 @@
-﻿using System.Collections;
+﻿namespace LZW;
 
-namespace Task2;
+using System.Collections;
+using System.IO;
 
-internal static class LZW
+/// <summary>
+/// Реализация алгоритма LZW для сжатия и разжатия файлов
+/// </summary>
+public static class LZW
 {
-    public static void Compress(string inputFileName)
+    /// <summary>
+    /// Создать сжатый файл из исходного
+    /// </summary>
+    public static void Compress(string fileName)
     {
-        var table = new Dictionary<string, char>();
-        int newRecordsCount = 0;
-        for (int i = 0; i < 256; i++)
+        int currentByteSize = 9;
+
+        byte[] bytesArray = File.ReadAllBytes(fileName);
+        var trie = new Trie(-1);
+
+        for (var i = 0; i < 256; i++)
         {
-            table[((char)i).ToString()] = (char)i;
+            trie.AddSymbol((char)i);
+            trie.ReturnPointerToRoot();
         }
 
-        byte[] inputData = File.ReadAllBytes(inputFileName);
+        var compressedFileName = new FileInfo(fileName + ".zipped");
+        var compressedFile = compressedFileName.Create();
 
-        string[] splittedFileName = inputFileName.Split('.');
-        string newFileName = "";
-        for (int i = 0; i < splittedFileName.Length - 1; i++)
+        var buffer = new BitArray(64);
+        var bufferIndex = 0;
+
+        var bytesArrayIndex = 0;
+
+        while (bytesArrayIndex < bytesArray.Length)
         {
-            newFileName += (splittedFileName[i] + ".");
-        }
-        newFileName += "zipped";
+            bool newSequenceAdded = trie.AddSymbol((char)bytesArray[bytesArrayIndex]);
+            int previousSequenceNumber = 0;
 
-        FileStream fileStream = new FileStream(newFileName, FileMode.Create, FileAccess.Write);
-        StreamWriter streamWriter = new StreamWriter(fileStream);
-
-        string fileExtension = "." + splittedFileName[splittedFileName.Length - 1];
-        streamWriter.WriteLine(fileExtension);
-
-        string currentPhrase = "";
-        for (int i = 0; i < inputData.Length; i++)
-        {
-            char symbol = (char)inputData[i];
-
-            if (table.ContainsKey(currentPhrase + symbol))
+            while (!newSequenceAdded)
             {
-                currentPhrase += symbol;
+                previousSequenceNumber = trie.GetCurrentNodeNumber();
+                bytesArrayIndex++;
+                newSequenceAdded = trie.AddSymbol((char)bytesArray[bytesArrayIndex]);
+
+                if (bytesArrayIndex == bytesArray.Length - 1)
+                {
+                    break;
+                }
+            }
+
+            if (bytesArrayIndex == bytesArray.Length - 1)
+            {
+                if (newSequenceAdded)
+                {
+                    AddByteToBuffer(buffer, previousSequenceNumber, currentByteSize, ref bufferIndex);
+                    AddByteToBuffer(buffer, bytesArray[bytesArrayIndex], currentByteSize, ref bufferIndex);
+                }
+                else
+                {
+                    AddByteToBuffer(buffer, trie.GetCurrentNodeNumber(), currentByteSize, ref bufferIndex);
+                }
             }
             else
             {
-                streamWriter.Write(table[currentPhrase]);
-                newRecordsCount++;
-                table[currentPhrase + symbol] = (char)(255 + newRecordsCount);
-                currentPhrase = symbol.ToString();
+                AddByteToBuffer(buffer, previousSequenceNumber, currentByteSize, ref bufferIndex);
             }
 
-            if (newRecordsCount == 65536 - 255)
+            if (bytesArrayIndex == bytesArray.Length - 1)
             {
-                streamWriter.Write(table[currentPhrase]);
-                table = new Dictionary<string, char>();
-                newRecordsCount = 0;
-                currentPhrase = "";
-                for (int j = 0; j < 256; j++)
-                {
-                    table[((char)j).ToString()] = (char)j;
-                }
+                PadBufferWithZerosToMultipleOfEight(buffer, ref bufferIndex);
+            }
+
+            SplitBufferIntoBytesAndWriteToFile(buffer, ref bufferIndex, compressedFile);
+
+            if (trie.GetCurrentNodeNumber() == Math.Pow(2, currentByteSize))
+            {
+                currentByteSize++;
             }
         }
-        streamWriter.Write(table[currentPhrase]);
-
-        streamWriter.Close();
-        fileStream.Close();
     }
 
-    public static void Decompress(string inputFileName)
+    /// <summary>
+    /// Разжать ".zipped" файл
+    /// </summary>
+    public static void Decompress(string fileName)
     {
-        var table = new Dictionary<char, string>();
-        int newRecordsCount = 0;
-        for (int i = 0; i < 256; i++)
-        {
-            table[(char)i] = ((char)i).ToString();
-        }
-
-        string[] data = File.ReadAllLines(inputFileName);
-        string fileExtension = data[0];
-        string encodedData = "";
-        for (int i = 1; i < data.Length; i++)
-        {
-            encodedData += data[i];
-            if (i != data.Length - 1)
-            {
-                encodedData += "\r\n";
-            }
-        }
-
-        int lastDotindex = inputFileName.LastIndexOf(".");
-        string newFileName = inputFileName.Substring(0, lastDotindex) + fileExtension;
-
-        FileStream fileStream = new FileStream(newFileName, FileMode.Create, FileAccess.Write);
-        StreamWriter streamWriter = new StreamWriter(fileStream);
-
-        string previousDecodedValue = "";
-        for (int i = 0; i < encodedData.Length; i++)
-        {
-            char currentCode = encodedData[i];
-            if (table.ContainsKey(currentCode))
-            {
-                streamWriter.Write(table[currentCode]);
-                if (previousDecodedValue != "")
-                {
-                    newRecordsCount++;
-                    table[(char)(255 + newRecordsCount)] = previousDecodedValue + table[currentCode].Substring(0, 1);
-                }
-                previousDecodedValue = table[currentCode];
-            }
-            else
-            {
-                string createdValue = previousDecodedValue + previousDecodedValue.Substring(0, 1);
-                streamWriter.Write(createdValue);
-                newRecordsCount++;
-                table[(char)(255 + newRecordsCount)] = createdValue;
-                previousDecodedValue = table[currentCode];
-            }
-
-            if (newRecordsCount == 65536)
-            {
-                table = new Dictionary<char, string>();
-                newRecordsCount = 0;
-                previousDecodedValue = "";
-                for (int j = 0; j < 256; j++)
-                {
-                    table[(char)i] = ((char)i).ToString();
-                }
-            }
-        }
-
-        streamWriter.Close();
-        fileStream.Close();
+        // pass
     }
 
-    public static void Main(string[] args)
+    /// <summary>
+    /// Создать по номеру байт и добавить его в битовый буфер
+    /// </summary>
+    private static void AddByteToBuffer(BitArray buffer, int byteNumber, int currentByteSize, ref int currentBufferIndex)
     {
-        /*  Compress("C:/Users/User/source/repos/Homeworks2/Задания с 03.03.2022/Task2/Task2/bin/Debug/net6.0/Task10.exe");
-          Decompress("C:/Users/User/source/repos/Homeworks2/Задания с 03.03.2022/Task2/Task2/bin/Debug/net6.0/Task10.zipped");*/
-/*        Compress("C:/Users/User/source/repos/Homeworks2/Задания с 03.03.2022/Task2/Task2/test.txt");
-        Decompress("C:/Users/User/source/repos/Homeworks2/Задания с 03.03.2022/Task2/Task2/test.zipped");*/
+        int notNullasCount = 0;
+        while (byteNumber > 0)
+        {
+            int bit = byteNumber % 2;
+            buffer[currentBufferIndex] = (bit == 0) ? false : true;
+            byteNumber /= 2;
+            currentBufferIndex++;
+            notNullasCount++;
+        }
+
+        for (int i = 0; i < currentByteSize - notNullasCount; i++)
+        {
+            buffer[currentBufferIndex] = false;
+            currentBufferIndex++;
+        }
+    }
+
+    /// <summary>
+    /// Дополнить буфер нулями до числа, кратного 8
+    /// </summary>
+    private static void PadBufferWithZerosToMultipleOfEight(BitArray buffer, ref int currentBufferIndex)
+    {
+        while (currentBufferIndex % 8 != 0)
+        {
+            buffer[currentBufferIndex] = false;
+            currentBufferIndex++;
+        }
+    }
+
+    /// <summary>
+    /// Разбить буфер на байты и записать каждый байт в сжатый файл
+    /// </summary>
+    private static void SplitBufferIntoBytesAndWriteToFile(BitArray buffer, ref int currentBufferIndex, FileStream compressedFile)
+    {
+        while (currentBufferIndex >= 8)
+        {
+            byte newByte = 0;
+            var multiplier = 1;
+
+            for (int i = 0; i < 8; i++)
+            {
+                newByte += (byte)((buffer[i] ? 1 : 0) * multiplier);
+                multiplier *= 2;
+                buffer[i] = false;
+            }
+
+            currentBufferIndex -= 8;
+            buffer.RightShift(8);
+            compressedFile.WriteByte(newByte);
+        }
     }
 }
