@@ -45,11 +45,13 @@ public class SkipList<T> : IList<T> where T : IComparable<T>
     }
 
     private ListElement[] headsOfLevels;
+    private List<T> listForEnumerator;
 
     public SkipList(int levelsCount)
     {
         LevelsCount = levelsCount;
 
+        listForEnumerator = new List<T>();
         headsOfLevels = new ListElement[LevelsCount];
         InitializeHeadsOfLevels();
     }
@@ -102,6 +104,22 @@ public class SkipList<T> : IList<T> where T : IComparable<T>
         if (IsReadOnly)
         {
             throw new NotSupportedException("Список только для чтения");
+        }
+
+        if (listForEnumerator.Count == 0 || item.CompareTo(listForEnumerator[listForEnumerator.Count - 1]) >= 0)
+        {
+            listForEnumerator.Add(item);
+        }
+        else
+        {
+            for (int i = 0; i < listForEnumerator.Count - 1; i++)
+            {
+                if (item.CompareTo(listForEnumerator[i]) >= 0 && item.CompareTo(listForEnumerator[i + 1]) <= 0)
+                {
+                    listForEnumerator.Insert(i + 1, item);
+                    break;
+                }
+            }
         }
 
         var currentElement = headsOfLevels[LevelsCount - 1];
@@ -162,6 +180,8 @@ public class SkipList<T> : IList<T> where T : IComparable<T>
     /// </summary>
     public void Clear()
     {
+        listForEnumerator.Clear();
+        
         Count = 0;
         headsOfLevels = new ListElement[LevelsCount];
         InitializeHeadsOfLevels();
@@ -208,6 +228,14 @@ public class SkipList<T> : IList<T> where T : IComparable<T>
         if (IsReadOnly)
         {
             throw new NotSupportedException("Список только для чтения");
+        }
+
+        for (int i = 0; i < listForEnumerator.Count; i++)
+        {
+            if (listForEnumerator[i].CompareTo(item) == 0)
+            {
+                listForEnumerator.RemoveAt(i);
+            }
         }
 
         var elementToRemove = FindFirstOccurrenceOfElement(item);
@@ -277,6 +305,8 @@ public class SkipList<T> : IList<T> where T : IComparable<T>
         {
             throw new ArgumentOutOfRangeException("Индекс находится за пределами элементов списка");
         }
+
+        listForEnumerator.RemoveAt(index);
 
         var elementToDelete = headsOfLevels[0];
         for (int i = 0; i <= index; i++)
@@ -354,20 +384,11 @@ public class SkipList<T> : IList<T> where T : IComparable<T>
     }
 
     /// <summary>
-    /// Получить нижний уровень списка
+    /// Получить список в виде обычного отсортированного списка
     /// </summary>
     private List<T> GetList()
     {
-        var list = new List<T>();
-        var currentElement = headsOfLevels[0].Next;
-
-        for (int i = 0; i < Count; i++)
-        {
-            list.Add(currentElement!.Value!);
-            currentElement = currentElement.Next;
-        }
-
-        return list;
+        return listForEnumerator;
     }
 
     /// <summary>
