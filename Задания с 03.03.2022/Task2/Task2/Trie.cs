@@ -43,36 +43,30 @@ public class Trie
     /// <summary>
     /// Добавить символ в Бор
     /// </summary>
-    /// <returns>Возвращает true, если была создана новая вершина и false, если после добавления указатель остался в пределах Бора</returns>
-    public bool AddSymbol(char symbol)
+    /// <returns>Возвращает false, если была создана новая вершина и true, если после добавления указатель остался в пределах Бора
+    /// Также возвращает номер вершины, на которой остановился Бор</returns>
+    public (bool inTree, int elementNumber) AddSymbol(char symbol)
     {
-        bool newNodeCreated = false;
+        bool inTree = true;
+        int elementNumber = 0;
 
         if (!currentNode.Childs.ContainsKey(symbol))
         {
             numberForNewNode++;
             var newNode = new Node(numberForNewNode);
             currentNode.Childs[symbol] = newNode;
-            newNodeCreated = true;
+
+            inTree = false;
+            elementNumber = numberForNewNode;
+
+            currentNode = root;
+        }
+        else
+        {
+            currentNode = currentNode.Childs[symbol];
+            elementNumber = currentNode.Number;
         }
 
-        currentNode = currentNode.Childs[symbol];
-        return newNodeCreated;
-    }
-
-    /// <summary>
-    /// Получить номер вершины, на которой в данной момент находится указатель
-    /// </summary>
-    public int GetCurrentNodeNumber()
-    {
-        return currentNode.Number;
-    }
-
-    /// <summary>
-    /// Вернуть указатель на текущую вершину в корень Бора
-    /// </summary>
-    public void ReturnPointerToRoot()
-    {
-        currentNode = root;
+        return (inTree, elementNumber);
     }
 }

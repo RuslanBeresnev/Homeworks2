@@ -13,135 +13,152 @@ public static class LZW
     /// </summary>
     public static void Compress(string fileName)
     {
-        int currentByteSize = 9;
-
-        byte[] bytesArray = File.ReadAllBytes(fileName);
+        int currentBitSize = 9;
         var trie = new Trie(-1);
 
-        for (var i = 0; i < 256; i++)
+        for (int i = 0; i < 256; i++)
         {
             trie.AddSymbol((char)i);
-            trie.ReturnPointerToRoot();
         }
+
+        byte[] bytesArray = File.ReadAllBytes(fileName);
+        int bytesArrayIndex = 0;
 
         var compressedFileName = new FileInfo(fileName + ".zipped");
         var compressedFile = compressedFileName.Create();
 
         var buffer = new BitArray(64);
-        var bufferIndex = 0;
-
-        var bytesArrayIndex = 0;
+        int  bufferIndex = 0;
 
         while (bytesArrayIndex < bytesArray.Length)
         {
-            bool newSequenceAdded = trie.AddSymbol((char)bytesArray[bytesArrayIndex]);
-            int previousSequenceNumber = 0;
-
-            while (!newSequenceAdded)
+            (bool isInTrie, int sequenceNumber) = (true, -1);
+            int previousSequenceNumber = -1;
+            while (isInTrie && bytesArrayIndex < bytesArray.Length)
             {
-                previousSequenceNumber = trie.GetCurrentNodeNumber();
+                previousSequenceNumber = sequenceNumber;
+                (isInTrie, sequenceNumber) = trie.AddSymbol((char)bytesArray[bytesArrayIndex]);
                 bytesArrayIndex++;
-                newSequenceAdded = trie.AddSymbol((char)bytesArray[bytesArrayIndex]);
+            }
 
-                if (bytesArrayIndex == bytesArray.Length - 1)
+            bytesArrayIndex -= isInTrie && bytesArrayIndex == bytesArray.Length ? 0 : 1;
+            if (isInTrie && bytesArrayIndex == bytesArray.Length)
+            {
+                previousSequenceNumber = sequenceNumber;
+            }
+
+            int notNullsCount = 0;
+            while (previousSequenceNumber > 0)
+            {
+                int bit = previousSequenceNumber % 2;
+                buffer[bufferIndex] = (bit == 0) ? false : true;
+                previousSequenceNumber /= 2;
+                bufferIndex++;
+                notNullsCount++;
+            }
+
+            for (int i = 0; i < currentBitSize - notNullsCount; i++)
+            {
+                buffer[bufferIndex] = false;
+                bufferIndex++;
+            }
+
+            if (bytesArrayIndex == bytesArray.Length)
+            {
+                while (bufferIndex % 8 != 0)
                 {
-                    break;
+                    buffer[bufferIndex] = false;
+                    bufferIndex++;
                 }
             }
 
-            if (bytesArrayIndex == bytesArray.Length - 1)
+            while (bufferIndex >= 8)
             {
-                if (newSequenceAdded)
+                byte newByte = 0;
+                var multiplier = 1;
+                for (int i = 0; i < 8; i++)
                 {
-                    AddByteToBuffer(buffer, previousSequenceNumber, currentByteSize, ref bufferIndex);
-                    AddByteToBuffer(buffer, bytesArray[bytesArrayIndex], currentByteSize, ref bufferIndex);
+                    newByte += (byte)((buffer[i] ? 1 : 0) * multiplier);
+                    multiplier *= 2;
+                    buffer[i] = false;
                 }
-                else
-                {
-                    AddByteToBuffer(buffer, trie.GetCurrentNodeNumber(), currentByteSize, ref bufferIndex);
-                }
-            }
-            else
-            {
-                AddByteToBuffer(buffer, previousSequenceNumber, currentByteSize, ref bufferIndex);
+
+                bufferIndex -= 8;
+                buffer.RightShift(8);
+                compressedFile.WriteByte(newByte);
             }
 
-            if (bytesArrayIndex == bytesArray.Length - 1)
+            if (sequenceNumber == Math.Pow(2, currentBitSize))
             {
-                PadBufferWithZerosToMultipleOfEight(buffer, ref bufferIndex);
-            }
-
-            SplitBufferIntoBytesAndWriteToFile(buffer, ref bufferIndex, compressedFile);
-
-            if (trie.GetCurrentNodeNumber() == Math.Pow(2, currentByteSize))
-            {
-                currentByteSize++;
+                currentBitSize++;
             }
         }
+
+        compressedFile.Close();
     }
 
     /// <summary>
     /// Разжать ".zipped" файл
     /// </summary>
-    public static void Decompress(string fileName)
+    /// <returns>true, если сжатый файл корректен</returns>
+    public static bool Decompress(string fileName)
     {
-        // pass
-    }
+        int currentByteSize = 9;
 
-    /// <summary>
-    /// Создать по номеру байт и добавить его в битовый буфер
-    /// </summary>
-    private static void AddByteToBuffer(BitArray buffer, int byteNumber, int currentByteSize, ref int currentBufferIndex)
-    {
-        int notNullasCount = 0;
-        while (byteNumber > 0)
+        byte[] bytesArray = File.ReadAllBytes(fileName);
+        var dictionary = new Dictionary<int, string>();
+        for (int i = 0; i < 256; i++)
         {
-            int bit = byteNumber % 2;
-            buffer[currentBufferIndex] = (bit == 0) ? false : true;
-            byteNumber /= 2;
-            currentBufferIndex++;
-            notNullasCount++;
+            dictionary.Add(i, char.ToString((char)i));
         }
 
-        for (int i = 0; i < currentByteSize - notNullasCount; i++)
-        {
-            buffer[currentBufferIndex] = false;
-            currentBufferIndex++;
-        }
-    }
+        var decompressedFileName = new FileInfo(fileName.Remove(fileName.Length - 7));
+        var decompressedFile = decompressedFileName.Create();
 
-    /// <summary>
-    /// Дополнить буфер нулями до числа, кратного 8
-    /// </summary>
-    private static void PadBufferWithZerosToMultipleOfEight(BitArray buffer, ref int currentBufferIndex)
-    {
-        while (currentBufferIndex % 8 != 0)
-        {
-            buffer[currentBufferIndex] = false;
-            currentBufferIndex++;
-        }
-    }
+        var bits = new BitArray(bytesArray);
+        var bitsIndex = 0;
 
-    /// <summary>
-    /// Разбить буфер на байты и записать каждый байт в сжатый файл
-    /// </summary>
-    private static void SplitBufferIntoBytesAndWriteToFile(BitArray buffer, ref int currentBufferIndex, FileStream compressedFile)
-    {
-        while (currentBufferIndex >= 8)
+        string? previousValue = null;
+        int currentNumber = 256;
+        while (bitsIndex < bits.Length)
         {
-            byte newByte = 0;
-            var multiplier = 1;
-
-            for (int i = 0; i < 8; i++)
+            int multiplier = 1;
+            int codeNumber = 0;
+            for (int i = 0; i < currentByteSize; i++)
             {
-                newByte += (byte)((buffer[i] ? 1 : 0) * multiplier);
+                codeNumber += multiplier * (bits[bitsIndex] ? 1 : 0);
                 multiplier *= 2;
-                buffer[i] = false;
+                bitsIndex++;
+
+                if (bitsIndex >= bits.Length)
+                {
+                    decompressedFile.Close();
+                    return codeNumber == 0;
+                }
             }
 
-            currentBufferIndex -= 8;
-            buffer.RightShift(8);
-            compressedFile.WriteByte(newByte);
+            var dictionaryValue = dictionary.ContainsKey(codeNumber) ? dictionary[codeNumber]
+                : previousValue + previousValue![0];
+            for (int i = 0; i < dictionaryValue.Length; i++)
+            {
+                decompressedFile.WriteByte((byte)dictionaryValue[i]);
+            }
+
+            if (previousValue != null)
+            {
+                dictionary.Add(currentNumber, previousValue + dictionaryValue[0]);
+                currentNumber++;
+
+                if (currentNumber == Math.Pow(2, currentByteSize))
+                {
+                    currentByteSize++;
+                }
+            }
+
+            previousValue = dictionaryValue;
         }
+
+        decompressedFile.Close();
+        return true;
     }
 }
