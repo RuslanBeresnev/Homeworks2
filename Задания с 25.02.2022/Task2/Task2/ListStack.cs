@@ -1,45 +1,57 @@
-﻿using System;
+﻿namespace PostfixCalculator;
 
-namespace PostfixCalculator;
-
+/// <summary>
+/// Реализация стека на списке
+/// </summary>
 public class ListStack : IStack
 {
-    public class Node
+    /// <summary>
+    /// Элемент списка
+    /// </summary>
+    private class Node
     {
-        public double value;
-
         public Node(double value)
         {
-            this.value = value;
+            Value = value;
         }
 
-        public Node next { get; set; }
+        /// <summary>
+        /// Следующй элемент
+        /// </summary>
+        public Node? Next { get; set; }
+
+        /// <summary>
+        /// Значение элемента списка
+        /// </summary>
+        public double Value { get; set; }
     }
+    /// <summary>
+    /// Самый первый элемент списка
+    /// </summary>
+    private Node? Head { get; set; }
 
     private int count;
 
-    public ListStack() {}
-
-    internal Node head { get; set; }
-
-    public bool IsEmpty()
-        => count == 0;
+    public bool IsEmpty() => count == 0;
 
     public void Push(double value)
     {
-        Node newNode = new Node(value);
-        newNode.next = head;
-        head = newNode;
+        var newNode = new Node(value);
+        newNode.Next = Head;
+        Head = newNode;
         count++;
     }
 
-    public (double?, bool) Pop()
+    public double? Pop()
     {
         if (IsEmpty())
-            return (null, false);
+        {
+            return null;
+        }
+
         count--;
-        Node temporary = head;
-        head = head.next;
-        return (temporary.value, true);
+        double value = Head!.Value;
+        Head = Head.Next;
+        return value;
     }
 }

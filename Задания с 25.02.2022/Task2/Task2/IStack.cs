@@ -1,19 +1,18 @@
-﻿using System;
-
-/// <summary>
+﻿/// <summary>
 /// Интерфейс стека
 /// </summary>
 public interface IStack
 {
     /// <summary>
-    /// Добавляет элемент в стек
+    /// Добавить элемент в стек
     /// </summary>
-    /// <param name="value">То, что нужно добавить</param>
     public void Push(double value);
+
     /// <summary>
-    /// Берёт верхний элемент стека и затем удаляет его
+    /// Вернуть верхний элемент и удалить его из стека
     /// </summary>
-    public (double?, bool) Pop();
+    public double? Pop();
+
     /// <summary>
     /// Проверка стека на пустоту
     /// </summary>

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace PostfixCalculator;
+﻿namespace PostfixCalculator;
 
 /// <summary>
 /// Реализация постфиксного калькулятора на выбранном стеке
@@ -15,34 +13,37 @@ public class PostfixCalculator
     }
 
     /// <summary>
-    /// Подсчитывает значение по постфиксной записи
+    /// Подсчитать значение по постфиксной записи
     /// </summary>
     /// <param name="expression">Постфиксная запись</param>
-    public (double?, bool) CalculateExpression(string expression)
+    public double? CalculateExpression(string expression)
     {
         string[] tokens = expression.Split(' ');
         bool isCorrectSequence = true;
 
-        foreach(var token in tokens)
+        foreach (var token in tokens)
         {
             if (!isCorrectSequence)
             {
-                break;
+                return null;
             }
 
-            int number;
-            bool isNumber = int.TryParse(token, out number);
+            bool isNumber = int.TryParse(token, out int number);
             if (isNumber)
+            {
                 stack.Push(number);
+            }
             else
             {
-                (double? number2, isCorrectSequence) = stack.Pop();
-                (double? number1, isCorrectSequence) = stack.Pop();
+                double? number2 = stack.Pop();
+                double? number1 = stack.Pop();
 
-                if (!isCorrectSequence)
+                if (number1 == null || number2 == null)
+                {
                     break;
+                }
 
-                switch(token)
+                switch (token)
                 {
                     case "+":
                         stack.Push((double)number1 + (double)number2);
@@ -66,7 +67,6 @@ public class PostfixCalculator
             }
         }
 
-        (double? result, isCorrectSequence) = stack.Pop();
-        return (result, isCorrectSequence);
+        return stack.Pop();
     }
 }
