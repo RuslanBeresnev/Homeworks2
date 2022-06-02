@@ -7,13 +7,11 @@ using System;
 /// </summary>
 public class Game
 {
-    private bool testRun = false;
-
     private string fileName;
     private char[,] mapMatrix;
-    private (int, int) mainCharacterCoordinates;
+    private (int x, int y) mainCharacterCoordinates;
 
-    private List<char> symbolsWithoutCollider = new List<char>() { default(char), ' ', '@' };
+    private List<char> symbolsWithoutCollider = new List<char>() { '\0', ' ', '@' };
 
     public Game(string fileName)
     {
@@ -25,7 +23,7 @@ public class Game
     /// <summary>
     /// Получить текущие координаты главного персонажа
     /// </summary>
-    public (int, int) MainCharacterCoordinates => mainCharacterCoordinates;
+    public (int x, int y) MainCharacterCoordinates => mainCharacterCoordinates;
 
     /// <summary>
     /// Для включения тестового прогона
@@ -38,7 +36,7 @@ public class Game
     private char[,] BuildMapFromFile()
     {
         var lines = new List<string?>();
-        var streamReader = new StreamReader(fileName);
+        using var streamReader = new StreamReader(fileName);
 
         int maxLineLength = 0;
         int linesCount = 0;
@@ -54,6 +52,7 @@ public class Game
             }
             linesCount++;
         }
+
         streamReader.Close();
 
         var mapMatrix = new char[linesCount, maxLineLength];
@@ -149,17 +148,17 @@ public class Game
         switch (direction)
         {
             case Direction.Left:
-                return mainCharacterCoordinates.Item1 > 0 &&
-                    symbolsWithoutCollider.Contains(mapMatrix[mainCharacterCoordinates.Item2, mainCharacterCoordinates.Item1 - 1]);
+                return mainCharacterCoordinates.x > 0 &&
+                    symbolsWithoutCollider.Contains(mapMatrix[mainCharacterCoordinates.y, mainCharacterCoordinates.x - 1]);
             case Direction.Right:
-                return mainCharacterCoordinates.Item1 < mapMatrix.GetLength(1) - 1 &&
-                    symbolsWithoutCollider.Contains(mapMatrix[mainCharacterCoordinates.Item2, mainCharacterCoordinates.Item1 + 1]);
+                return mainCharacterCoordinates.x < mapMatrix.GetLength(1) - 1 &&
+                    symbolsWithoutCollider.Contains(mapMatrix[mainCharacterCoordinates.y, mainCharacterCoordinates.x + 1]);
             case Direction.Up:
-                return mainCharacterCoordinates.Item2 > 0 &&
-                    symbolsWithoutCollider.Contains(mapMatrix[mainCharacterCoordinates.Item2 - 1, mainCharacterCoordinates.Item1]);
+                return mainCharacterCoordinates.y > 0 &&
+                    symbolsWithoutCollider.Contains(mapMatrix[mainCharacterCoordinates.y - 1, mainCharacterCoordinates.x]);
             case Direction.Down:
-                return mainCharacterCoordinates.Item2 < mapMatrix.GetLength(0) - 1 &&
-                    symbolsWithoutCollider.Contains(mapMatrix[mainCharacterCoordinates.Item2 + 1, mainCharacterCoordinates.Item1]);
+                return mainCharacterCoordinates.y < mapMatrix.GetLength(0) - 1 &&
+                    symbolsWithoutCollider.Contains(mapMatrix[mainCharacterCoordinates.y + 1, mainCharacterCoordinates.x]);
             default:
                 return false;
         }
@@ -172,32 +171,32 @@ public class Game
     {
         if (!TestRun)
         {
-            Console.SetCursorPosition(mainCharacterCoordinates.Item1, mainCharacterCoordinates.Item2);
+            Console.SetCursorPosition(mainCharacterCoordinates.x, mainCharacterCoordinates.y);
             Console.Write(" ");
         }
 
         switch (direction)
         {
             case Direction.Left:
-                mainCharacterCoordinates = (mainCharacterCoordinates.Item1 - 1, mainCharacterCoordinates.Item2);
+                mainCharacterCoordinates = (mainCharacterCoordinates.x - 1, mainCharacterCoordinates.y);
                 break;
             case Direction.Right:
-                mainCharacterCoordinates = (mainCharacterCoordinates.Item1 + 1, mainCharacterCoordinates.Item2);
+                mainCharacterCoordinates = (mainCharacterCoordinates.x + 1, mainCharacterCoordinates.y);
                 break;
             case Direction.Up:
-                mainCharacterCoordinates = (mainCharacterCoordinates.Item1, mainCharacterCoordinates.Item2 - 1);
+                mainCharacterCoordinates = (mainCharacterCoordinates.x, mainCharacterCoordinates.y - 1);
                 break;
             case Direction.Down:
-                mainCharacterCoordinates = (mainCharacterCoordinates.Item1, mainCharacterCoordinates.Item2 + 1);
+                mainCharacterCoordinates = (mainCharacterCoordinates.x, mainCharacterCoordinates.y + 1);
                 break;
         }
 
         if (!TestRun)
         {
-            Console.SetCursorPosition(mainCharacterCoordinates.Item1, mainCharacterCoordinates.Item2);
+            Console.SetCursorPosition(mainCharacterCoordinates.x, mainCharacterCoordinates.y);
             Console.Write("@");
 
-            Console.SetCursorPosition(mainCharacterCoordinates.Item1, mainCharacterCoordinates.Item2);
+            Console.SetCursorPosition(mainCharacterCoordinates.x, mainCharacterCoordinates.y);
         }
     }
 
