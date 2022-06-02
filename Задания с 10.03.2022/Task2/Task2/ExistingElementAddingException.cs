@@ -8,6 +8,7 @@ public class ExistingElementAddingException : Exception
     public ExistingElementAddingException()
     {
     }
+
     public ExistingElementAddingException(string message) : base(message)
     {
     }

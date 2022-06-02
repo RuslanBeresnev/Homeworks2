@@ -2,55 +2,58 @@ namespace UniqueListTests;
 
 using NUnit.Framework;
 using UniqueList;
+using System;
+using System.Collections.Generic;
 
 public class ListTests
 {
-    [Test]
-    public void AddAndGetElementMethodsTest()
+    private static IEnumerable<TestCaseData> Lists
+        => new TestCaseData[]
+        {
+        new TestCaseData(new UniqueList.List<int>()),
+        new TestCaseData(new UniqueList<int>()),
+        };
+
+    [TestCaseSource(nameof(Lists))]
+    public void AddAndGetElementMethodsTest(UniqueList.List<int> list)
     {
-        var list = new List<int>();
-        list.Add(1);
-        list.Add(2);
-        list.Add(3);
-        Assert.IsTrue(list.GetElement(0) == 1);
-        Assert.IsTrue(list.GetElement(1) == 2);
-        Assert.IsTrue(list.GetElement(2) == 3);
+        list.Add(1, 0);
+        list.Add(2, 0);
+        list.Add(3, 0);
+        Assert.AreEqual(3, list.GetElement(0));
+        Assert.AreEqual(2, list.GetElement(1));
+        Assert.AreEqual(1, list.GetElement(2));
     }
 
-    [Test]
-    public void SetAndGetElementMethodsTest()
+    [TestCaseSource(nameof(Lists))]
+    public void SetAndGetElementMethodsTest(UniqueList.List<int> list)
     {
-        var list = new List<int>();
-        list.Add(1);
-        list.Add(2);
-        list.Add(3);
+        list.Add(1, 0);
+        list.Add(2, 0);
+        list.Add(3, 0);
         list.SetElement(0, 0);
-        list.SetElement(1, 1);
-        list.SetElement(2, 2);
-        Assert.IsTrue(list.GetElement(0) == 0);
-        Assert.IsTrue(list.GetElement(1) == 1);
-        Assert.IsTrue(list.GetElement(2) == 2);
+        list.SetElement(1, -1);
+        list.SetElement(2, -2);
+        Assert.AreEqual(0, list.GetElement(0));
+        Assert.AreEqual(-1, list.GetElement(1));
+        Assert.AreEqual(-2, list.GetElement(2));
     }
 
-    [Test]
-    public void RemoveAndGetElementMethodsTest()
+    [TestCaseSource(nameof(Lists))]
+    public void RemoveAndGetElementMethodsTest(UniqueList.List<int> list)
     {
-        var list = new List<int>();
-        list.Add(1);
-        list.Add(2);
-        list.Add(3);
+        list.Add(1, 0);
+        list.Add(2, 0);
+        list.Add(3, 0);
         list.Remove(0);
         list.Remove(1);
-        Assert.IsTrue(list.GetElement(0) == default(int));
-        Assert.IsTrue(list.GetElement(1) == default(int));
-        Assert.IsTrue(list.GetElement(2) == 3);
-        Assert.IsTrue(list.Length == 3);
+        Assert.AreEqual(1, list.GetElement(0));
+        Assert.IsTrue(list.Length == 1);
     }
 
-    [Test]
-    public void RemoveNonExistingElementTest()
+    [TestCaseSource(nameof(Lists))]
+    public void RemoveNonExistingElementTest(UniqueList.List<int> list)
     {
-        var list = new List<int>();
-        Assert.Throws<NonExistentElementReferencingException>(() => list.Remove(0));
+        Assert.Throws<IndexOutOfRangeException>(() => list.Remove(-1));
     }
 }
