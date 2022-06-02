@@ -5,14 +5,14 @@ using System.Collections.Generic;
 /// <summary>
 /// Класс с функциями Map(), Filter(), Fold()
 /// </summary>
-public static class MapFilterFold<T>
+public static class MapFilterFold
 {
     /// <summary>
     /// Преобразование каждого элемента списка с помощью функции mapFunction
     /// </summary>
-    public static List<T> Map(List<T> list, Func<T, T> mapFunction)
+    public static List<int> Map(List<int> list, Func<int, int> mapFunction)
     {
-        var resultList = new List<T>();
+        var resultList = new List<int>();
         foreach(var item in list)
         {
             resultList.Add(mapFunction(item));
@@ -23,9 +23,9 @@ public static class MapFilterFold<T>
     /// <summary>
     /// Возвращает список только с теми элементами, для которых функция filterFunction вернула значение true
     /// </summary>
-    public static List<T> Filter(List<T> list, Func<T, bool> filterFunction)
+    public static List<int> Filter(List<int> list, Func<int, bool> filterFunction)
     {
-        var resultList = new List<T>();
+        var resultList = new List<int>();
         foreach (var item in list)
         {
             if (filterFunction(item))
@@ -39,9 +39,9 @@ public static class MapFilterFold<T>
     /// <summary>
     /// Функция возвращает "накопленное" значение, используя начальное значение и элементы списка
     /// </summary>
-    public static T Fold(List<T> list, T initialValue, Func<T, T, T> foldFunction)
+    public static int Fold(List<int> list, int initialValue, Func<int, int, int> foldFunction)
     {
-        T result = initialValue;
+        int result = initialValue;
         foreach (var item in list)
         {
             result = foldFunction(result, item);

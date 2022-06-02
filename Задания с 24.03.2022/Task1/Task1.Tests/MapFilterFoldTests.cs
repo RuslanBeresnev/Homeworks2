@@ -11,22 +11,24 @@ public class Tests
     [Test]
     public void MapFunctionTest()
     {
-        var resultList = MapFilterFold<int>.Map(numbersList, x => x * 3);
-        Assert.AreEqual(resultList, new List<int> { 3, 6, 9, 12, 15, 18, 21, 24, 27, 30 });
+        var resultList = MapFilterFold.Map(numbersList, x => x * 3);
+        Assert.AreEqual(new List<int> { 3, 6, 9, 12, 15, 18, 21, 24, 27, 30 }, resultList);
+        Assert.AreEqual(new List<int>(), MapFilterFold.Map(new List<int>(), x => x * 3));
     }
 
     [Test]
     public void FilterFunctionTest()
     {
-        var resultList = MapFilterFold<int>.Filter(numbersList, x => x % 3 == 0);
-        Assert.AreEqual(resultList, new List<int> { 3, 6, 9 });
+        var resultList = MapFilterFold.Filter(numbersList, x => x % 3 == 0);
+        Assert.AreEqual(new List<int> { 3, 6, 9 }, resultList);
+        Assert.AreEqual(new List<int>(), MapFilterFold.Filter(new List<int>(), x => x % 3 == 0));
     }
 
     [Test]
     public void FoldFunctionTest()
     {
-        int result = 0;
-        result = MapFilterFold<int>.Fold(numbersList, 1, (acc, elem) => acc * elem);
-        Assert.AreEqual(result, 3628800);
+        int result = MapFilterFold.Fold(numbersList, 1, (acc, elem) => acc * elem);
+        Assert.AreEqual(3628800, result);
+        Assert.AreEqual(1, MapFilterFold.Fold(new List<int>(), 1, (acc, elem) => acc * elem));
     }
 }
