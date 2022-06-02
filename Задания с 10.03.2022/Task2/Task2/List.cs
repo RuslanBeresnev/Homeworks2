@@ -8,7 +8,7 @@ public class List<T>
     /// <summary>
     /// List element class
     /// </summary>
-    private class Node<T>
+    private class Node
     {
         internal Node(T value, int id)
         {
@@ -30,10 +30,10 @@ public class List<T>
         /// <summary>
         /// Interaction with next element
         /// </summary>
-        internal Node<T>? Next { get; set; }
+        internal Node? Next { get; set; }
     }
 
-    private Node<T>? head = null;
+    private Node? head = null;
     private int length = 0;
 
     /// <summary>
@@ -46,7 +46,7 @@ public class List<T>
     /// </summary>
     public virtual void Add(T value, int index)
     {
-        var newElement = new Node<T>(value, index);
+        var newElement = new Node(value, index);
         length++;
 
         if (head == null)

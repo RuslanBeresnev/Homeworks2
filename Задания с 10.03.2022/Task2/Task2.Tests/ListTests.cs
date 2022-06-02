@@ -10,8 +10,8 @@ public class ListTests
     private static IEnumerable<TestCaseData> Lists
         => new TestCaseData[]
         {
-        new TestCaseData(new UniqueList.List<int>()),
-        new TestCaseData(new UniqueList<int>()),
+            new TestCaseData(new UniqueList.List<int>()),
+            new TestCaseData(new UniqueList<int>()),
         };
 
     [TestCaseSource(nameof(Lists))]
