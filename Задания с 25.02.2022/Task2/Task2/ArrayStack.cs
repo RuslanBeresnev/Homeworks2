@@ -8,9 +8,11 @@ public class ArrayStack : IStack
     private double[] items;
     private int count = 0;
 
-    public ArrayStack() => items = new double[25];
+    public ArrayStack() 
+        => items = new double[25];
 
-    public ArrayStack(int maxLength) => items = new double[maxLength];
+    public ArrayStack(int maxLength) 
+        => items = new double[maxLength];
 
     public bool IsEmpty() => count == 0;
 

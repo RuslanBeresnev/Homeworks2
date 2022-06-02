@@ -25,6 +25,7 @@ public class ListStack : IStack
         /// </summary>
         public double Value { get; set; }
     }
+
     /// <summary>
     /// Самый первый элемент списка
     /// </summary>
