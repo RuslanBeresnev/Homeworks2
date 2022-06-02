@@ -24,6 +24,9 @@ public partial class ClockForm : Form
         penForMinuteArrow.CustomEndCap = new AdjustableArrowCap(3, 3);
         penForSecondArrow = new Pen(Color.Red, 2);
         penForSecondArrow.CustomEndCap = new AdjustableArrowCap(3, 3);
+
+        TimerTick(this, EventArgs.Empty);
+
     }
 
     private void TimerTick(object sender, EventArgs e)

@@ -47,7 +47,7 @@ partial class ClockForm
             // timer
             // 
             this.timer.Enabled = true;
-            this.timer.Interval = 1000;
+            this.timer.Interval = 10000;
             this.timer.Tick += new System.EventHandler(this.TimerTick);
             // 
             // number12
