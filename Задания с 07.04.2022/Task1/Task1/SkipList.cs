@@ -1,7 +1,6 @@
 ﻿namespace SkipList;
 
 using System.Collections;
-using System.Collections.Generic;
 
 /// <summary>
 /// Реализация структуры данных "Список с пропусками"
@@ -63,7 +62,7 @@ public class SkipList<T> : IList<T> where T : IComparable<T>
     {
         for (int i = 0; i < LevelsCount; i++)
         {
-            var headOfLevel = new ListElement(default(T));
+            var headOfLevel = new ListElement(default);
             if (i > 0)
             {
                 headOfLevel.Bottom = headsOfLevels[i - 1];
