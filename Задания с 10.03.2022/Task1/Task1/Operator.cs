@@ -5,38 +5,31 @@
 /// </summary>
  public abstract class Operator : INode
 {
-    private INode? rightChild;
-    private INode? leftChild;
-    private char nodeOperator;
-
-    /// <summary>
-    /// Interaction with nodeOperator
-    /// </summary>
-    public char NodeOperator
-    {
-        get { return nodeOperator; }
-        set { nodeOperator = value; }
-    }
-
     /// <summary>
     /// Interaction with rightChild
     /// </summary>
-    public INode? RightChild
-    {
-        get { return rightChild; }
-        set { rightChild = value; }
-    }
+    public INode? RightChild { get; set; }
 
     /// <summary>
     /// Interaction with leftChild
     /// </summary>
-    public INode? LeftChild
-    {
-        get { return leftChild; }
-        set { leftChild = value; }
-    }
+    public INode? LeftChild { get; set; }
 
-    public abstract void Print();
+    protected abstract char Sign { get; }
+
+    public void Print()
+    {
+        if (LeftChild == null || RightChild == null)
+        {
+            throw new InvalidOperationException();
+        }
+
+        Console.Write("( ");
+        LeftChild.Print();
+        Console.Write($"{Sign} ");
+        RightChild.Print();
+        Console.Write(") ");
+    }
 
     public abstract int Calculate();
 }

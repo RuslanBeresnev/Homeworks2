@@ -1,26 +1,24 @@
-﻿namespace ParseTree;
-
-internal class Program
+﻿static string ReadSequenceFromFile(string fileName)
 {
-    private static string ReadSequenceFromFile(string fileName)
-    {
-        var streamReader = new StreamReader(fileName);
-        string sequence = streamReader.ReadToEnd();
-        streamReader.Close();
-        return sequence;
-    }
-
-    static void Main(string[] args)
-    {
-        string sequence = ReadSequenceFromFile("C:/Users/User/source/repos/Homeworks2/Задания с 10.03.2022/Task1/Task1/Parse Expression.txt");
-        var parseTree = new ParseTree(sequence);
-        INode? root = parseTree.Parse();
-        if (root == null)
-        {
-            throw new ArgumentNullException("Пустой файл");
-        }
-        Console.WriteLine($"Вычисленное значение: {parseTree.Calculate(root)}");
-        Console.Write($"Напечатанное дерево: ");
-        parseTree.Print(root);
-    }
+    var streamReader = new StreamReader(fileName);
+    string sequence = streamReader.ReadToEnd();
+    streamReader.Close();
+    return sequence;
 }
+
+string sequence = ReadSequenceFromFile("C:/Users/User/source/repos/Homeworks2/Задания с 10.03.2022/Task1/Task1/Parse Expression.txt");
+var parseTree = new ParseTree.ParseTree(sequence);
+
+var calculatedValue = 0;
+try
+{
+    calculatedValue = parseTree.Calculate();
+}
+catch (InvalidOperationException)
+{
+    Console.WriteLine("Пустой файл или некорректная последовательность");
+    return;
+}
+Console.WriteLine($"Вычисленное значение: {calculatedValue}");
+Console.Write($"Напечатанное дерево: ");
+parseTree.Print();

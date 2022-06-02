@@ -14,18 +14,18 @@ public class ParseTree
     }
 
     private static bool IsInteger(string probablyNumber)
-    {
-        return Int32.TryParse(probablyNumber, out int result);
-    }
+        => Int32.TryParse(probablyNumber, out int _);
 
-    private bool ThirdParseConditionIsMet()
+    private bool BracketsConditionIsMet()
     {
         int counter = 0;
         bool verdict = true;
         foreach (var element in sequence[index].Split(")"))
         {
             if ((counter == 0 && !IsInteger(element)) || (counter > 0 && element != ""))
+            {
                 verdict = false;
+            }
             counter++;
         }
         return verdict;
@@ -35,74 +35,62 @@ public class ParseTree
     /// Build Parse Tree from splitted sequence
     /// </summary>
     /// <returns>Root of Parse Tree</returns>
-    public INode? Parse()
+    private INode? Parse()
     {
         index++;
-        INode? newNode = null;
         if (index < sequence.Length && sequence.Length != 1)
         {
             if (sequence[index][0] == '(' && "+-*/".Contains(sequence[index][1]))
             {
                 char nodeOperator = sequence[index][1];
-                switch (nodeOperator)
+                Operator newNode = nodeOperator switch
                 {
-                    case '+':
-                        newNode = new Addition();
-                        break;
-                    case '-':
-                        newNode = new Subtraction();
-                        break;
-                    case '*':
-                        newNode = new Multiplication();
-                        break;
-                    case '/':
-                        newNode = new Division();
-                        break;
-                }
-                (newNode as Operator)!.LeftChild = Parse();
-                (newNode as Operator)!.RightChild = Parse();
+                    '+' => new Addition(),
+                    '-' => new Subtraction(),
+                    '*' => new Multiplication(),
+                    '/' => new Division(),
+                    _ => throw new InvalidOperationException()
+                };
+                newNode.LeftChild = Parse();
+                newNode.RightChild = Parse();
+                return newNode;
             }
             else if (IsInteger(sequence[index]))
             {
-                newNode = new Operand();
-                (newNode as Operand)!.Number = int.Parse(sequence[index]);
+                return new Operand() { Number = int.Parse(sequence[index]) };
             }
-            else if (ThirdParseConditionIsMet())
+            else if (BracketsConditionIsMet())
             {
-                newNode = new Operand();
-                (newNode as Operand)!.Number = int.Parse(sequence[index].Split(")")[0]);
+                return new Operand() { Number = int.Parse(sequence[index].Split(")")[0]) };
             }
-            else
-            {
-                throw new InvalidOperationException();
-            }
+            return null;
         }
-        return newNode;
+        return null;
     }
 
     /// <summary>
     /// Calculate Parse Tree value
     /// </summary>
-    public int Calculate(INode root)
+    public int Calculate()
     {
+        var root = Parse();
         if (root == null)
         {
-            throw new ArgumentNullException();
+            throw new InvalidOperationException();
         }
-
         return root.Calculate();
     }
 
     /// <summary>
     /// Print Parse Tree
     /// </summary>
-    public void Print(INode root)
+    public void Print()
     {
+        var root = Parse();
         if (root == null)
         {
-            throw new ArgumentNullException();
+            throw new InvalidOperationException();
         }
-
         root.Print();
     }
 }

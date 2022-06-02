@@ -2,6 +2,7 @@ namespace ParseTreeTests;
 
 using NUnit.Framework;
 using ParseTree;
+using System;
 
 public class Tests
 {
@@ -10,9 +11,8 @@ public class Tests
     {
         string sequence = "(/ (* 5 -22) (- (- 9 8) (* -10 1)))";
         var parseTree = new ParseTree(sequence);
-        var root = parseTree.Parse();
-        int evaluation = parseTree.Calculate(root);
-        Assert.IsTrue(evaluation == -10);
+        int evaluation = parseTree.Calculate();
+        Assert.AreEqual(-10, evaluation);
     }
 
     [Test]
@@ -20,8 +20,7 @@ public class Tests
     {
         string sequence = "(/ 10 0)";
         var parseTree = new ParseTree(sequence);
-        var root = parseTree.Parse();
-        Assert.Throws<System.ArgumentException>(() => parseTree.Calculate(root));
+        Assert.Throws<ArgumentException>(() => parseTree.Calculate());
     }
 
     [Test]
@@ -29,8 +28,7 @@ public class Tests
     {
         string sequence = "";
         var parseTree = new ParseTree(sequence);
-        var root = parseTree.Parse();
-        Assert.IsTrue(root == null);
+        Assert.Throws<InvalidOperationException>(() => parseTree.Calculate());
     }
 
     [Test]
@@ -38,6 +36,6 @@ public class Tests
     {
         string sequence = "(( ))) dev 3";
         var parseTree = new ParseTree(sequence);
-        Assert.Throws<System.InvalidOperationException>(() => parseTree.Parse());
+        Assert.Throws<InvalidOperationException>(() => parseTree.Calculate());
     }
 }

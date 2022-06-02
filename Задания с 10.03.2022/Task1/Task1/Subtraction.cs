@@ -5,10 +5,7 @@
 /// </summary>
 public class Subtraction : Operator
 {
-    public Subtraction()
-    {
-        NodeOperator = '-';
-    }
+    protected override char Sign => '-';
 
     public override int Calculate()
     {
@@ -18,19 +15,5 @@ public class Subtraction : Operator
         }
 
         return LeftChild.Calculate() - RightChild.Calculate();
-    }
-
-    public override void Print()
-    {
-        if (LeftChild == null || RightChild == null)
-        {
-            throw new InvalidOperationException();
-        }
-
-        Console.Write("( ");
-        LeftChild.Print();
-        Console.Write("- ");
-        RightChild.Print();
-        Console.Write(") ");
     }
 }

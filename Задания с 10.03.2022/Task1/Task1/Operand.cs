@@ -5,20 +5,14 @@
 /// </summary>
 public class Operand : INode
 {
-    private int number;
-
     /// <summary>
     /// Interacrion with number
     /// </summary>
-    public int Number
-    {
-        get { return number; }
-        set { number = value; }
-    }
+    public int Number { get; set; }
 
     public void Print()
-        => Console.Write($"{number} ");
+        => Console.Write($"{Number} ");
 
     public int Calculate()
-        => number;
+        => Number;
 }

@@ -5,10 +5,7 @@
 /// </summary>
 public class Division : Operator
 {
-    public Division()
-    {
-        NodeOperator = '/';
-    }
+    protected override char Sign => '/';
 
     public override int Calculate()
     {
@@ -22,19 +19,5 @@ public class Division : Operator
             throw new ArgumentException("Деление на ноль");
         }
         return LeftChild.Calculate() / RightChild.Calculate();
-    }
-
-    public override void Print()
-    {
-        if (LeftChild == null || RightChild == null)
-        {
-            throw new InvalidOperationException();
-        }
-
-        Console.Write("( ");
-        LeftChild.Print();
-        Console.Write("/ ");
-        RightChild.Print();
-        Console.Write(") ");
     }
 }
