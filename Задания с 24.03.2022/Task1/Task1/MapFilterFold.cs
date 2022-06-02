@@ -1,7 +1,5 @@
 ﻿namespace MapFilterFold;
 
-using System.Collections.Generic;
-
 /// <summary>
 /// Класс с функциями Map(), Filter(), Fold()
 /// </summary>
@@ -13,7 +11,7 @@ public static class MapFilterFold
     public static List<int> Map(List<int> list, Func<int, int> mapFunction)
     {
         var resultList = new List<int>();
-        foreach(var item in list)
+        foreach (var item in list)
         {
             resultList.Add(mapFunction(item));
         }
